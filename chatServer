@@ -1,0 +1,35 @@
+import java.io.DataInputStream;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server {
+	public static void main(String[] args) throws Exception {
+		ServerSocket server = new ServerSocket(30000);
+		System.out.println("on...");
+		System.out.println("waiting...");
+		Socket sock = server.accept();
+		System.out.println(sock.getInetAddress()+" oo...");
+		
+		
+//		OutputStream os = sock.getOutputStream();
+//		//used upgrade Stream.
+//		//OutputStream is inconvenient
+//		DataOutputStream dos = new DataOutputStream(os);
+//		
+//		dos.writeUTF("a");
+//		//to flush buffer
+//		dos.flush();
+//		
+//		dos.close();
+		
+		InputStream is = sock.getInputStream();
+		DataInputStream dis = new DataInputStream(is);
+		
+		while(true) {
+		String msg = dis.readUTF();
+		System.out.println(msg);
+		}
+		//dis.close();
+	}
+}
