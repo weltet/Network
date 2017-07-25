@@ -1,0 +1,73 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import javax.swing.JOptionPane;
+
+public class RealtimeChatServer {
+	
+	private ServerSocket server = null;
+	private Socket sock = null;
+	private DataInputStream dis;
+	private DataOutputStream dos;
+	
+	public RealtimeChatServer() {
+		
+		try {
+		ServerSocket server = new ServerSocket(30000);
+		
+		}catch(Exception e) {
+			e.printStackTrace();
+			System.out.println("Fail to connect");
+			System.exit(0);
+		}//--------------------------------------------
+		
+		try {
+			System.out.println("Server on");
+			sock = server.accept();
+			this.dis = new DataInputStream(sock.getInputStream());
+			this.dos = new DataOutputStream(sock.getOutputStream());
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			System.out.println("fail to connection initialize");
+			System.exit(0);
+		}//--------------------------------------------
+		
+		Thread input = new Thread()  {
+			public void run() {
+				String msg;
+				
+				while(true) {
+				try {
+					msg = dis.readUTF();
+					System.out.println(msg);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.out.println("connection lost");
+					System.exit(0);
+				}
+				}
+			}
+		};input.start();
+		
+		try {//---------------------------------------------------
+			while(true) {
+				try {
+				dos.writeUTF(JOptionPane.showInputDialog("enter massege"));
+				dos.flush();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+			
+			}
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+		
+	}
+	public static void main(String[] args) throws Exception {
+		new RealtimeChatServer();
+	}
+}
