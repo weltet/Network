@@ -20,27 +20,16 @@ public class Client {
 		DataInputStream dis = new DataInputStream(is);
 		
 		while(true) {
-		
-		
 		dos.writeUTF(JOptionPane.showInputDialog("enter massege"));
 		dos.flush();
-		
-		
-		
-		
-		
 		//dos.close();
-		
-		
-		
 		
 		
 		String msg = dis.readUTF();
 		System.out.println(msg);
-		
-		
-		}
 		//dis.close();
+		}
+		
 	}
 	}
 
