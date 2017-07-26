@@ -1,0 +1,50 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+class ConnectionThread extends Thread{
+	private Socket sock = null;
+	private DataInputStream dis;
+	private DataOutputStream dos;
+	
+	public ConnectionThread(Socket sock) {
+		try {
+		this.sock = sock;
+		dis = new DataInputStream(sock.getInputStream());
+		dos = new DataOutputStream(sock.getOutputStream());
+		}catch(Exception e) {
+			System.out.println("error 1");
+		}
+	}
+	
+	public void run() {
+		try {
+		System.out.println(sock.getInetAddress()+" connected");
+		
+		
+		while(true) {
+		String msg = dis.readUTF();
+		System.out.println(msg);
+		}
+		
+		}catch(Exception e) {
+			System.out.println("disconnected");
+		}
+	}
+	
+	
+}
+
+public class MultiThreadServer {
+	public static void main(String[] args) throws Exception {
+		ServerSocket server = new ServerSocket(20000);
+		
+		while(true) {
+		ConnectionThread th = new ConnectionThread(server.accept()); 
+		th.start();
+		}
+		
+		
+	}
+}
