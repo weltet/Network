@@ -1,0 +1,161 @@
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+public class UIChatClient extends JFrame{
+	
+	private Socket client = null;
+	private DataInputStream dis= null;
+	private DataOutputStream dos= null;
+	
+	
+	
+	private final static String newline = "\n";
+	
+	private JButton sendButton = new JButton("send");
+	private JTextField userInput = new JTextField();
+	private JTextArea ChatContents = new JTextArea();
+	private JScrollPane ChatScroll = new JScrollPane(ChatContents);
+	private JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+	
+	private void socketInit() {
+		try {
+		client = new Socket("192.168.53.4",20000);
+		
+		OutputStream os = client.getOutputStream();
+		dos = new DataOutputStream(os);
+		
+		InputStream is = client.getInputStream();
+		dis = new DataInputStream(is);
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	private void compInit() {
+		
+		this.userInput.setPreferredSize(new Dimension(200,30));
+		this.ChatContents.setEditable(false);
+		//==this.areaContents.setFocusable(false);
+		//==this.areaContents.setEnable(false);
+		this.ChatContents.setLineWrap(true);
+		this.inputPanel.add(userInput);
+		this.inputPanel.add(sendButton);
+		
+		this.add(inputPanel, BorderLayout.SOUTH);
+		this.add(ChatScroll);
+		
+		
+		this.userInput.requestFoucusInWindow();
+		
+		
+		
+	}
+	
+	Thread input = new Thread()  {
+		public void run() {
+			String msg;
+			
+			while(true) {
+			try {
+				msg = dis.readUTF();
+				ChatContents.append(msg+newline);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.out.println("connection lost");
+				System.exit(0);
+			}
+			}
+		}
+	};
+	
+	public void eventInit() {
+			
+		this.userInput.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				ChatContents.append(userInput.getText() + newline);
+				
+				userInput.setText("");
+				
+				try {
+					dos.writeUTF(userInput.getText());
+					dos.flush();
+					
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+			}
+		
+		});
+		
+		this.sendButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ChatContents.append(userInput.getText() + newline);
+				userInput.setText("");
+				
+			}
+		
+		});
+	}
+	
+	public UIChatClient(){
+		this.setTitle("Chat");
+		this.setSize(300,400);
+		this.setLocationRelativeTo(null);
+		this.setDefaultCloseOperation(UIChatClient.EXIT_ON_CLOSE);
+		try {
+			this.socketInit();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.compInit();
+		this.eventInit();
+		this.setVisible(true);
+		
+	}
+	
+	
+	//Swing - Event Dispatch Thread.
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run(){
+			new UIChatClient();
+			}
+		});
+		
+		
+	}
+		
+	}
+
+
