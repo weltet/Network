@@ -1,0 +1,172 @@
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+public class UIChatServer extends JFrame{
+	
+	private ServerSocket sock = null;
+	private DataInputStream dis;
+	private DataOutputStream dos;
+	private ServerSocket server;
+	private Socket client;
+	private InetAddress serverAddress;
+	private String serverIP;
+	
+	private final static String newline = "\n";
+	
+	private JButton sendButton = new JButton("send");
+	private JTextField userInput = new JTextField();
+	private JTextArea ChatContents = new JTextArea();
+	private JScrollPane ChatScroll = new JScrollPane(ChatContents);
+	private JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+	
+	private void socketInit() throws Exception {
+		server = new ServerSocket(20000);
+		client = server.accept();
+		serverAddress = InetAddress.getLocalHost();
+		serverIP = serverAddress.getHostAddress();
+		
+		System.out.println(serverIP);
+		
+		 dis = new DataInputStream(client.getInputStream());
+		 dos =  new DataOutputStream(client.getOutputStream());
+		
+	}
+	
+	
+	
+	private void compInit() {
+		
+		this.userInput.setPreferredSize(new Dimension(200,30));
+		this.ChatContents.setEditable(false);
+		this.ChatContents.setLineWrap(true);
+		this.inputPanel.add(userInput);
+		this.inputPanel.add(sendButton);
+		
+		this.add(inputPanel, BorderLayout.SOUTH);
+		this.add(ChatScroll);
+		
+		this.addWindowListener( new WindowAdapter() {
+		    public void windowOpened( WindowEvent e ){
+		    	userInput.requestFocus();
+		    }
+		}); 
+		
+		
+	}
+	
+	
+	public void eventInit() {
+		
+		
+		Thread input = new Thread() {
+			public void run() {
+				String msg;
+				
+				
+			    
+				while(true) {
+					try {
+						
+					msg = dis.readUTF();
+					
+					
+					InetAddress ClientAddress = client.getInetAddress();
+				    String clientIP = ClientAddress.getHostAddress();
+					
+					ChatContents.append( msg+"\n");
+					}catch(Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		};input.start();
+		
+		
+		
+		this.userInput.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				String msg = userInput.getText();
+				userInput.setText("");
+				ChatContents.append(serverIP + msg + newline);
+				try {
+					
+				dos.writeUTF(serverIP + " : " +msg);
+				dos.flush();
+				}catch(Exception er) {
+					er.printStackTrace();
+				}
+				
+				
+			}
+		
+		});
+		
+		this.sendButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				String msg = userInput.getText();
+				userInput.setText("");
+				ChatContents.append(serverIP + msg + newline);
+				try {
+				dos.writeUTF(msg + newline);
+				dos.flush();
+				}catch(Exception er) {
+					er.printStackTrace();
+				}
+				
+				
+			}
+		
+		});
+	}
+	
+	public UIChatServer(){
+		
+		try {
+			this.socketInit();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return;//exit.
+		}
+		
+		this.setTitle("Chat Server");
+		this.setSize(300,400);
+		this.setLocationRelativeTo(null);
+		this.setDefaultCloseOperation(UIChatServer.EXIT_ON_CLOSE);
+		this.compInit();
+		this.eventInit();
+		this.setVisible(true);
+		
+	}
+	
+	
+
+	public static void main(String[] args) {
+		new UIChatServer();
+		
+	  }
+		
+	}
+
